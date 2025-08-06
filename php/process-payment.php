@@ -20,11 +20,16 @@ declare(strict_types=1);
 
 require_once 'vendor/autoload.php';
 
+ini_set('display_errors', '0');
+
 use Dotenv\Dotenv;
 use GlobalPayments\Api\Entities\Address;
+use GlobalPayments\Api\Entities\Transaction;
+use GlobalPayments\Api\Entities\Enums\Channel;
+use GlobalPayments\Api\Entities\Enums\Environment;
 use GlobalPayments\Api\Entities\Exceptions\ApiException;
 use GlobalPayments\Api\PaymentMethods\CreditCardData;
-use GlobalPayments\Api\ServiceConfigs\Gateways\PorticoConfig;
+use GlobalPayments\Api\ServiceConfigs\Gateways\GpApiConfig;
 use GlobalPayments\Api\ServicesContainer;
 
 ini_set('display_errors', '0');
@@ -42,11 +47,12 @@ function configureSdk(): void
     $dotenv = Dotenv::createImmutable(__DIR__);
     $dotenv->load();
 
-    $config = new PorticoConfig();
-    $config->secretApiKey = $_ENV['SECRET_API_KEY'];
-    $config->developerId = '000000';
-    $config->versionNumber = '0000';
-    $config->serviceUrl = 'https://cert.api2.heartlandportico.com';
+    $config = new GpApiConfig();
+    $config->appId = $_ENV['APP_ID'];
+    $config->appKey = $_ENV['APP_KEY'];
+    $config->channel = Channel::CardNotPresent;
+    $config->environment = Environment::TEST;
+    $config->country = 'IE';
     
     ServicesContainer::configureService($config);
 }
@@ -73,6 +79,8 @@ function sanitizePostalCode(?string $postalCode): string
 configureSdk();
 
 try {
+    $results = [];
+
     // Validate required fields
     if (!isset($_POST['payment_token'], $_POST['billing_zip'], $_POST['amount'])) {
         throw new ApiException('Missing required fields');
@@ -93,14 +101,14 @@ try {
     $address->postalCode = sanitizePostalCode($_POST['billing_zip']);
 
     // Process the payment transaction with specified amount
-    $response = $card->charge($amount)
+    $response = $card->authorize($amount)
         ->withAllowDuplicates(true)
-        ->withCurrency('USD')
+        ->withCurrency('EUR')
         ->withAddress($address)
         ->execute();
     
     // Verify transaction was successful
-    if ($response->responseCode !== '00') {
+    if ($response->responseCode !== 'SUCCESS') {
         http_response_code(400);
         echo json_encode([
             'success' => false,
@@ -114,13 +122,44 @@ try {
     }
 
     // Return success response with transaction ID
-    echo json_encode([
+    $results[] = [
         'success' => true,
         'message' => 'Payment successful! Transaction ID: ' . $response->transactionId,
         'data' => [
             'transactionId' => $response->transactionId
         ]
-    ]);
+    ];
+
+    // At a later time (e.g. at shipment), Process the capture transaction with by referencing
+    // the previous transaction
+    $captureResponse = Transaction::fromId($response->transactionId)
+        ->capture()
+        ->execute();
+    
+    // Verify transaction was successful
+    if ($captureResponse->responseCode !== 'SUCCESS') {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Payment capture failed',
+            'error' => [
+                'code' => 'PAYMENT_DECLINED',
+                'details' => $captureResponse->responseMessage
+            ]
+        ]);
+        exit;
+    }
+
+    // Return success response with transaction ID
+    $results[] = [
+        'success' => true,
+        'message' => 'Capture successful! Transaction ID: ' . $captureResponse->transactionId,
+        'data' => [
+            'transactionId' => $captureResponse->transactionId
+        ]
+    ];
+
+    echo json_encode($results);
 } catch (ApiException $e) {
     // Handle payment processing errors
     http_response_code(400);

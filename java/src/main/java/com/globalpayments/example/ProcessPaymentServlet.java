@@ -6,7 +6,11 @@ import com.global.api.entities.Transaction;
 import com.global.api.entities.exceptions.ApiException;
 import com.global.api.entities.exceptions.ConfigurationException;
 import com.global.api.paymentMethods.CreditCardData;
-import com.global.api.serviceConfigs.PorticoConfig;
+import com.global.api.serviceConfigs.GpApiConfig;
+import com.global.api.entities.enums.Channel;
+import com.global.api.entities.enums.Environment;
+import com.global.api.services.GpApiService;
+import com.global.api.entities.gpApi.entities.AccessTokenInfo;
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -36,6 +40,7 @@ public class ProcessPaymentServlet extends HttpServlet {
     
     private static final long serialVersionUID = 1L;
     private final Dotenv dotenv = Dotenv.load();
+    private GpApiConfig config;
     
     /**
      * Initializes the servlet and configures the Global Payments SDK.
@@ -47,11 +52,12 @@ public class ProcessPaymentServlet extends HttpServlet {
     public void init() throws ServletException {
         try {
             // Configure the Global Payments SDK with credentials and settings
-            PorticoConfig config = new PorticoConfig();
-            config.setSecretApiKey(dotenv.get("SECRET_API_KEY"));
-            config.setDeveloperId("000000");
-            config.setVersionNumber("0000");
-            config.setServiceUrl("https://cert.api2.heartlandportico.com");
+            config = new GpApiConfig();
+            config.setAppId(dotenv.get("APP_ID"));
+            config.setAppKey(dotenv.get("APP_KEY"));
+            config.setChannel(Channel.CardNotPresent);
+            config.setEnvironment(Environment.TEST);
+            config.setCountry("IE");
 
             ServicesContainer.configureService(config);
         } catch (ConfigurationException e) {
@@ -73,13 +79,29 @@ public class ProcessPaymentServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         if (request.getServletPath().equals("/config")) {
-        response.setContentType("application/json");
-        String publicKey = dotenv.get("PUBLIC_API_KEY");
-        String jsonResponse = String.format(
-            "{\"success\":true,\"data\":{\"publicApiKey\":\"%s\"}}", 
-            publicKey
-        );
-        response.getWriter().write(jsonResponse);
+            response.setContentType("application/json");
+            try {
+                GpApiConfig clientConfig = new GpApiConfig();
+                clientConfig.setAppId(config.getAppId());
+                clientConfig.setAppKey(config.getAppKey());
+                clientConfig.setChannel(config.getChannel());
+                clientConfig.setEnvironment(config.getEnvironment());
+                clientConfig.setCountry(config.getCountry());
+                clientConfig.setPermissions(new String[]{"PMT_POST_Create_Single"});
+                AccessTokenInfo accessTokenInfo = GpApiService.generateTransactionKey(clientConfig);
+                String jsonResponse = String.format(
+                    "{\"success\":true,\"data\":{\"accessToken\":\"%s\"}}", 
+                    accessTokenInfo.getAccessToken()
+                );
+                response.getWriter().write(jsonResponse);
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                String errorResponse = String.format(
+                    "{\"success\":false,\"message\":\"Failed to generate access token\",\"error\":\"%s\"}", 
+                    e.getMessage()
+                );
+                response.getWriter().write(errorResponse);
+            }
         }
     }
 
@@ -144,29 +166,48 @@ public class ProcessPaymentServlet extends HttpServlet {
             Address address = new Address();
             address.setPostalCode(sanitizePostalCode(billingZip));
 
-            // Process the payment transaction using the provided amount
-            Transaction transaction = card.charge(amount)
+            // Process the authorization transaction using the provided amount
+            Transaction authTransaction = card.authorize(amount)
                     .withAllowDuplicates(true)
-                    .withCurrency("USD")
+                    .withCurrency("EUR")
                     .withAddress(address)
                     .execute();
 
-            // Verify transaction was successful
-            if (!"00".equals(transaction.getResponseCode())) {
+            // Verify authorization was successful
+            if (!"SUCCESS".equals(authTransaction.getResponseCode())) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 String errorResponse = String.format(
-                    "{\"success\":false,\"message\":\"Payment processing failed\",\"error\":{\"code\":\"PAYMENT_DECLINED\",\"details\":\"%s\"}}", 
-                    transaction.getResponseMessage()
+                    "{\"success\":false,\"message\":\"Payment authorization failed\",\"error\":{\"code\":\"PAYMENT_DECLINED\",\"details\":\"%s\"}}", 
+                    authTransaction.getResponseMessage()
                 );
                 response.getWriter().write(errorResponse);
                 return;
             }
 
-            // Return success response with transaction ID
+            // At a later time (e.g. at shipment), Process the capture transaction
+            Transaction captureTransaction = Transaction.fromId(authTransaction.getTransactionId())
+                    .capture()
+                    .execute();
+
+            // Verify capture was successful
+            if (!"SUCCESS".equals(captureTransaction.getResponseCode())) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                String errorResponse = String.format(
+                    "{\"success\":false,\"message\":\"Payment capture failed\",\"error\":{\"code\":\"PAYMENT_DECLINED\",\"details\":\"%s\"}}", 
+                    captureTransaction.getResponseMessage()
+                );
+                response.getWriter().write(errorResponse);
+                return;
+            }
+
+            // Return success response with both transaction IDs
             String successResponse = String.format(
-                "{\"success\":true,\"message\":\"Payment successful! Transaction ID: %s\",\"data\":{\"transactionId\":\"%s\"}}", 
-                transaction.getTransactionId(),
-                transaction.getTransactionId()
+                "[{\"success\":true,\"message\":\"Payment successful! Transaction ID: %s\",\"data\":{\"transactionId\":\"%s\"}}, " +
+                "{\"success\":true,\"message\":\"Capture successful! Transaction ID: %s\",\"data\":{\"transactionId\":\"%s\"}}]", 
+                authTransaction.getTransactionId(),
+                authTransaction.getTransactionId(),
+                captureTransaction.getTransactionId(),
+                captureTransaction.getTransactionId()
             );
             response.getWriter().write(successResponse);
 

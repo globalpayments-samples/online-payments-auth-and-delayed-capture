@@ -19,12 +19,27 @@ declare(strict_types=1);
 
 require_once 'vendor/autoload.php';
 
+ini_set('display_errors', '0');
+
 use Dotenv\Dotenv;
+use GlobalPayments\Api\Entities\Enums\Channel;
+use GlobalPayments\Api\Services\GpApiService;
+use GlobalPayments\Api\ServiceConfigs\Gateways\GpApiConfig;
+use GlobalPayments\Api\ServicesContainer;
 
 try {
     // Load environment variables from .env file
     $dotenv = Dotenv::createImmutable(__DIR__);
     $dotenv->load();
+
+    $config = new GpApiConfig();
+    $config->appId = $_ENV['APP_ID'];
+    $config->appKey = $_ENV['APP_KEY'];
+    $config->channel = Channel::CardNotPresent;
+    $config->permissions = ['PMT_POST_Create_Single'];
+    ServicesContainer::configureService($config);
+
+    $accessTokenInfo = GpApiService::generateTransactionKey($config);
 
     // Set response content type to JSON
     header('Content-Type: application/json');
@@ -33,7 +48,7 @@ try {
     echo json_encode([
         'success' => true,
         'data' => [
-            'publicApiKey' => $_ENV['PUBLIC_API_KEY'],
+            'accessToken' => $accessTokenInfo->accessToken,
         ],
     ]);
 } catch (Exception $e) {
