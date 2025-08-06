@@ -5,11 +5,9 @@ This starter template provides a customizable foundation for Global Payments SDK
 ## Available Implementations
 
 - [.NET Core](./dotnet/) - ASP.NET Core web application
-- [Go](./go/) - Go HTTP server application
 - [Java](./java/) - Jakarta EE servlet-based web application
 - [Node.js](./nodejs/) - Express.js web application
 - [PHP](./php/) - PHP web application
-- [Python](./python/) - Flask web application
 
 ## Template Features
 
@@ -41,7 +39,7 @@ Each template includes:
 ## Quick Start
 
 1. **Copy the template** - Copy this directory to start your new project
-2. **Choose your language** - Navigate to any implementation directory (nodejs, python, php, java, dotnet, go)
+2. **Choose your language** - Navigate to any implementation directory (nodejs, php, java, dotnet)
 3. **Set up credentials** - Copy `.env.sample` to `.env` and add your Global Payments API keys
 4. **Run the server** - Execute `./run.sh` to install dependencies and start the server
 5. **Customize** - Modify the code for your specific payment use case
