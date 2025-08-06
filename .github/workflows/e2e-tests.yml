@@ -1,0 +1,132 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore: 
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      test_implementation:
+        description: 'Test specific implementation'
+        required: false
+        default: 'nodejs'
+        type: choice
+        options:
+          - 'nodejs'
+          - 'php'
+          - 'java'
+          - 'dotnet'
+
+env:
+  NODE_VERSION: '18'
+  PHP_VERSION: '8.3'
+  JAVA_VERSION: '21'
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        implementation: [nodejs, php, java, dotnet]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Setup PHP
+      if: matrix.implementation == 'php'
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ env.PHP_VERSION }}
+        extensions: mbstring, xml, ctype, iconv, intl, curl, json
+        tools: composer:v2
+    
+    - name: Setup Java
+      if: matrix.implementation == 'java'
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: ${{ env.JAVA_VERSION }}
+    
+    - name: Setup .NET
+      if: matrix.implementation == 'dotnet'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Install test dependencies
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npx playwright install chromium
+    
+    - name: Setup environment
+      run: |
+        echo "APP_ID=${{ vars.APP_ID || 'test_app_id' }}" > .env
+        echo "APP_KEY=${{ secrets.APP_KEY || 'test_app_key' }}" >> .env
+        
+        # Copy .env to implementation directories
+        cp .env ${{ matrix.implementation }}/.env
+    
+    - name: Install implementation dependencies
+      run: |
+        cd ${{ matrix.implementation }}
+        case "${{ matrix.implementation }}" in
+          nodejs) npm ci ;;
+          php) composer install --no-dev --optimize-autoloader ;;
+          java) mvn clean compile -DskipTests ;;
+          dotnet) dotnet restore ;;
+        esac
+    
+    - name: Run E2E tests
+      run: |
+        export IMPLEMENTATION_FILTER="${{ matrix.implementation }}"
+        npm run test:ci
+      env:
+        CI: true
+        APP_ID: ${{ vars.APP_ID || 'test_app_id' }}
+        APP_KEY: ${{ secrets.APP_KEY || 'test_app_key' }}
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.implementation }}
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 7
+    
+    - name: Upload logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: logs-${{ matrix.implementation }}
+        path: |
+          ${{ matrix.implementation }}/*.log
+        retention-days: 3
+
+  summary:
+    if: always()
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test Summary
+      run: |
+        echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "Tests completed for all implementations" >> $GITHUB_STEP_SUMMARY
+        echo "Check individual job results for details" >> $GITHUB_STEP_SUMMARY

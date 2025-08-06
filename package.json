@@ -1,19 +1,53 @@
 {
-  "name": "starter-template",
+  "name": "online-payments-auth-and-delayed-capture",
   "version": "1.0.0",
-  "description": "Global Payments SDK starter template for multiple languages",
+  "description": "Global Payments SDK validation project for authorization and delayed capture across multiple languages",
   "type": "commonjs",
   "scripts": {
-    "start": "node nodejs/server.js",
-    "dev": "node nodejs/server.js"
+    "test": "playwright test",
+    "test:ci": "playwright test --reporter=junit",
+    "test:headed": "playwright test --headed", 
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    
+    "test:nodejs": "IMPLEMENTATION_FILTER=nodejs playwright test",
+    "test:python": "IMPLEMENTATION_FILTER=python playwright test",
+    "test:php": "IMPLEMENTATION_FILTER=php playwright test", 
+    "test:java": "IMPLEMENTATION_FILTER=java playwright test",
+    "test:go": "IMPLEMENTATION_FILTER=go playwright test",
+    "test:dotnet": "IMPLEMENTATION_FILTER=dotnet playwright test",
+    
+    "test:single": "playwright test --workers=1",
+    "test:verbose": "playwright test --reporter=list",
+    
+    "setup": "npm ci && npx playwright install chromium",
+    "setup:env": "./setup-env.sh",
+    "setup:all": "npm run setup:nodejs && npm run setup:php && npm run setup:python && npm run setup:java && npm run setup:go && npm run setup:dotnet",
+    "setup:nodejs": "cd nodejs && npm ci",
+    "setup:php": "cd php && composer install --no-dev",
+    "setup:java": "cd java && mvn clean install -DskipTests",
+    "setup:dotnet": "cd dotnet && dotnet restore",
+    
+    "serve:report": "npx playwright show-report",
+    "cleanup": "rm -rf test-results playwright-report junit.xml",
+    "cleanup:ports": "lsof -ti:8000 | xargs kill -9 || true",
+    
+    "pretest": "npm run cleanup",
+    "posttest": "npm run cleanup:ports"
   },
   "keywords": [
     "payments",
     "sdk",
     "template",
-    "starter"
+    "starter",
+    "playwright",
+    "testing"
   ],
   "author": "",
   "license": "ISC",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "node-fetch": "^2.7.0"
+  }
 }

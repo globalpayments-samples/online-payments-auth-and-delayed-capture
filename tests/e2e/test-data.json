@@ -1,0 +1,42 @@
+{
+  "validCard": {
+    "number": "4242424242424242",
+    "expMonth": "12",
+    "expYear": "25",
+    "cvv": "123",
+    "cardholderName": "Jane Doe"
+  },
+  "declineCard": {
+    "number": "4000120000001154",
+    "expMonth": "12",
+    "expYear": "25",
+    "cvv": "123",
+    "cardholderName": "Jane Doe"
+  },
+  "billingInfo": {
+    "zipCode": "12345"
+  },
+  "amount": "10.00",
+  "testServers": {
+    "nodejs": {
+      "command": "cd nodejs && npm start",
+      "url": "http://127.0.0.1:8000",
+      "configEndpoint": "/config"
+    },
+    "php": {
+      "command": "cd php && php -S 0.0.0.0:8000",
+      "url": "http://127.0.0.1:8000", 
+      "configEndpoint": "/config.php"
+    },
+    "java": {
+      "command": "cd java && mvn clean package cargo:run",
+      "url": "http://127.0.0.1:8000",
+      "configEndpoint": "/config"
+    },
+    "dotnet": {
+      "command": "cd dotnet && dotnet run",
+      "url": "http://127.0.0.1:8000",
+      "configEndpoint": "/config"
+    }
+  }
+}
