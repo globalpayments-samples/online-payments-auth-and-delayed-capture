@@ -1,16 +1,18 @@
 using GlobalPayments.Api;
 using GlobalPayments.Api.Entities;
 using GlobalPayments.Api.PaymentMethods;
+using GlobalPayments.Api.Entities.Enums;
+using GlobalPayments.Api.Services;
 using dotenv.net;
 
 namespace CardPaymentSample;
 
 /// <summary>
-/// Card Payment Processing Application
+/// Authorization and Delayed Capture Processing Application
 /// 
-/// This application demonstrates card payment processing using the Global Payments SDK.
-/// It provides endpoints for configuration and payment processing, handling tokenized
-/// card data to ensure secure payment processing.
+/// This application demonstrates authorization and delayed capture payment processing 
+/// using the Global Payments SDK. It processes authorization and immediate capture
+/// in a single workflow, handling tokenized card data to ensure secure payment processing.
 /// </summary>
 public class Program
 {
@@ -28,9 +30,10 @@ public class Program
         app.UseStaticFiles();
         
         // Configure the SDK on startup
-        ConfigureGlobalPaymentsSDK();
+        var config = ConfigureGlobalPaymentsSDK();
+        ServicesContainer.ConfigureService(config);
 
-        ConfigureEndpoints(app);
+        ConfigureEndpoints(app, config);
         
         var port = System.Environment.GetEnvironmentVariable("PORT") ?? "8000";
         app.Urls.Add($"http://0.0.0.0:{port}");
@@ -42,31 +45,57 @@ public class Program
     /// Configures the Global Payments SDK with necessary credentials and settings.
     /// This must be called before processing any payments.
     /// </summary>
-    private static void ConfigureGlobalPaymentsSDK()
+    private static GpApiConfig ConfigureGlobalPaymentsSDK()
     {
-        ServicesContainer.ConfigureService(new PorticoConfig
+        var config = new GpApiConfig
         {
-            SecretApiKey = System.Environment.GetEnvironmentVariable("SECRET_API_KEY"),
-            DeveloperId = "000000",
-            VersionNumber = "0000",
-            ServiceUrl = "https://cert.api2.heartlandportico.com"
-        });
+            AppId = System.Environment.GetEnvironmentVariable("APP_ID"),
+            AppKey = System.Environment.GetEnvironmentVariable("APP_KEY"),
+            Channel = Channel.CardNotPresent,
+            Environment = GlobalPayments.Api.Entities.Environment.TEST,
+            Country = "IE",
+        };
+        
+        return config;
     }
 
     /// <summary>
     /// Configures the application's HTTP endpoints for payment processing.
     /// </summary>
     /// <param name="app">The web application to configure</param>
-    private static void ConfigureEndpoints(WebApplication app)
+    /// <param name="config">The GP API configuration</param>
+    private static void ConfigureEndpoints(WebApplication app, GpApiConfig config)
     {
         // Configure HTTP endpoints
-        app.MapGet("/config", () => Results.Ok(new
-        { 
-            success = true,
-            data = new {
-                publicApiKey = System.Environment.GetEnvironmentVariable("PUBLIC_API_KEY")
+        app.MapGet("/config", () => {
+            try
+            {
+                var clientConfig = new GpApiConfig();
+                clientConfig.AppId = config.AppId;
+                clientConfig.AppKey = config.AppKey;
+                clientConfig.Channel = config.Channel;
+                clientConfig.Environment = config.Environment;
+                clientConfig.Country = config.Country;
+                clientConfig.Permissions = new string[] { "PMT_POST_Create_Single" };
+                var accessTokenInfo = GpApiService.GenerateTransactionKey(clientConfig);
+                return Results.Ok(new
+                { 
+                    success = true,
+                    data = new {
+                        accessToken = accessTokenInfo.Token
+                    }
+                });
             }
-        }));
+            catch (Exception ex)
+            {
+                return Results.Problem(new
+                {
+                    success = false,
+                    message = "Failed to generate access token",
+                    error = ex.Message
+                }.ToString(), statusCode: 500);
+            }
+        });
 
         ConfigurePaymentEndpoint(app);
     }
@@ -91,7 +120,7 @@ public class Program
     }
 
     /// <summary>
-    /// Configures the payment processing endpoint that handles card transactions.
+    /// Configures the payment processing endpoint that handles authorization and capture transactions.
     /// </summary>
     /// <param name="app">The web application to configure</param>
     private static void ConfigurePaymentEndpoint(WebApplication app)
@@ -144,35 +173,68 @@ public class Program
 
             try
             {
-                // Process the payment transaction using the provided amount
-                var response = card.Charge(amount)
+                var results = new List<object>();
+
+                // Process the authorization transaction using the provided amount
+                var authResponse = card.Authorize(amount)
                     .WithAllowDuplicates(true)
-                    .WithCurrency("USD")
+                    .WithCurrency("EUR")
                     .WithAddress(address)
                     .Execute();
 
-                // Verify transaction was successful
-                if (response.ResponseCode != "00")
+                // Verify authorization was successful
+                if (authResponse.ResponseCode != "SUCCESS")
                 {
                     return Results.BadRequest(new {
                         success = false,
-                        message = "Payment processing failed",
+                        message = "Payment authorization failed",
                         error = new {
                             code = "PAYMENT_DECLINED",
-                            details = response.ResponseMessage
+                            details = authResponse.ResponseMessage
                         }
                     });
                 }
 
-                // Return success response with transaction ID
-                return Results.Ok(new
+                // Add authorization result
+                results.Add(new
                 {
                     success = true,
-                    message = $"Payment successful! Transaction ID: {response.TransactionId}",
+                    message = $"Payment successful! Transaction ID: {authResponse.TransactionId}",
                     data = new {
-                        transactionId = response.TransactionId
+                        transactionId = authResponse.TransactionId
                     }
                 });
+
+                // At a later time (e.g. at shipment), Process the capture transaction
+                var captureResponse = Transaction.FromId(authResponse.TransactionId)
+                    .Capture()
+                    .Execute();
+
+                // Verify capture was successful
+                if (captureResponse.ResponseCode != "SUCCESS")
+                {
+                    return Results.BadRequest(new {
+                        success = false,
+                        message = "Payment capture failed",
+                        error = new {
+                            code = "PAYMENT_DECLINED",
+                            details = captureResponse.ResponseMessage
+                        }
+                    });
+                }
+
+                // Add capture result
+                results.Add(new
+                {
+                    success = true,
+                    message = $"Capture successful! Transaction ID: {captureResponse.TransactionId}",
+                    data = new {
+                        transactionId = captureResponse.TransactionId
+                    }
+                });
+
+                // Return success response with both transaction IDs
+                return Results.Ok(results);
             } 
             catch (ApiException ex)
             {

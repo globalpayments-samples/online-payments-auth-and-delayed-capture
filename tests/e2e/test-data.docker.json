@@ -1,0 +1,35 @@
+{
+  "validCard": {
+    "number": "4242424242424242",
+    "expMonth": "12",
+    "expYear": "25",
+    "cvv": "123"
+  },
+  "billingInfo": {
+    "zipCode": "12345"
+  },
+  "amount": "10.00",
+  "declineAmount": "10.08",
+  "testServers": {
+    "nodejs": {
+      "command": "docker-compose up nodejs",
+      "url": "http://nodejs:8000",
+      "configEndpoint": "/config"
+    },
+    "php": {
+      "command": "docker-compose up php",
+      "url": "http://php:8000", 
+      "configEndpoint": "/config.php"
+    },
+    "java": {
+      "command": "docker-compose up java",
+      "url": "http://java:8000",
+      "configEndpoint": "/config"
+    },
+    "dotnet": {
+      "command": "docker-compose up dotnet",
+      "url": "http://dotnet:8000",
+      "configEndpoint": "/config"
+    }
+  }
+}
