@@ -21,15 +21,15 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 /**
- * Card Payment Processing Servlet
+ * Authorization and Delayed Capture Processing Servlet
  * 
- * This servlet demonstrates card payment processing using the Global Payments SDK.
- * It provides endpoints for configuration and payment processing, handling 
- * tokenized card data to ensure secure payment processing.
+ * This servlet demonstrates authorization and delayed capture payment processing 
+ * using the Global Payments SDK. It processes authorization and immediate capture
+ * in a single workflow using tokenized card data for secure payment processing.
  * 
  * Endpoints:
- * - GET /config: Returns the public API key for client-side tokenization
- * - POST /process-payment: Processes card payments using tokenized data
+ * - GET /config: Returns the access token for client-side tokenization
+ * - POST /process-payment: Processes authorization and capture using tokenized data
  * 
  * @author Global Payments
  * @version 1.0
@@ -68,7 +68,7 @@ public class ProcessPaymentServlet extends HttpServlet {
 
     /**
      * Handles GET requests to /config endpoint.
-     * Returns the public API key needed for client-side tokenization.
+     * Returns the access token needed for client-side tokenization.
      *
      * @param request The HTTP request
      * @param response The HTTP response
@@ -123,7 +123,7 @@ public class ProcessPaymentServlet extends HttpServlet {
 
     /**
      * Handles POST requests to /process-payment endpoint.
-     * Processes card payments using tokenized card data.
+     * Processes authorization and delayed capture using tokenized card data.
      *
      * @param request The HTTP request containing payment details
      * @param response The HTTP response

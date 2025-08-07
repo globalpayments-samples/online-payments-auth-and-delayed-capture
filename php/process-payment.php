@@ -3,11 +3,12 @@
 declare(strict_types=1);
 
 /**
- * Card Payment Processing Script
+ * Authorization and Delayed Capture Processing Script
  *
- * This script demonstrates card payment processing using the Global Payments SDK.
- * It handles tokenized card data and billing information to process payments
- * securely through the Global Payments API.
+ * This script demonstrates authorization and delayed capture payment processing 
+ * using the Global Payments SDK. It processes authorization and immediate capture
+ * in a single workflow using tokenized card data and billing information
+ * to process payments securely through the Global Payments API.
  *
  * PHP version 7.4 or higher
  *

@@ -1,6 +1,6 @@
-# .NET Card Payment Example
+# .NET Authorization and Delayed Capture Example
 
-This example demonstrates card payment processing using ASP.NET Core and the Global Payments SDK.
+This example demonstrates authorization and delayed capture payment processing using ASP.NET Core and the Global Payments SDK.
 
 ## Requirements
 
@@ -51,13 +51,14 @@ The Global Payments SDK is configured using environment variables and the Portic
 - Sets up service URL for API communication
 - Configures developer identification
 
-### Payment Processing
-Payment processing flow:
+### Authorization Processing
+Authorization processing flow:
 1. Client submits payment token and billing zip
 2. Server creates CreditCardData with token
 3. Creates Address with postal code
-4. Processes $10 USD charge
-5. Returns success/error response
+4. Processes $10 USD authorization
+5. Returns success/error response with transaction ID
+
 
 ### Error Handling
 Implements comprehensive error handling:
@@ -78,7 +79,7 @@ Response:
 ```
 
 ### POST /process-payment
-Processes a payment using the provided token and billing information.
+Processes an authorization using the provided token and billing information.
 
 Request Parameters:
 - `payment_token` (string, required) - Token from client-side SDK
@@ -87,7 +88,7 @@ Request Parameters:
 Response (Success):
 ```json
 {
-    "message": "Payment successful! Transaction ID: xxx"
+    "message": "Authorization successful! Transaction ID: xxx"
 }
 ```
 
@@ -97,6 +98,7 @@ Response (Error):
     "detail": "Error message"
 }
 ```
+
 
 ## Security Considerations
 

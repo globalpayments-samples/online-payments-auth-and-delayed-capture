@@ -8,11 +8,11 @@ using dotenv.net;
 namespace CardPaymentSample;
 
 /// <summary>
-/// Card Payment Processing Application
+/// Authorization and Delayed Capture Processing Application
 /// 
-/// This application demonstrates card payment processing using the Global Payments SDK.
-/// It provides endpoints for configuration and payment processing, handling tokenized
-/// card data to ensure secure payment processing.
+/// This application demonstrates authorization and delayed capture payment processing 
+/// using the Global Payments SDK. It processes authorization and immediate capture
+/// in a single workflow, handling tokenized card data to ensure secure payment processing.
 /// </summary>
 public class Program
 {
@@ -120,7 +120,7 @@ public class Program
     }
 
     /// <summary>
-    /// Configures the payment processing endpoint that handles card transactions.
+    /// Configures the payment processing endpoint that handles authorization and capture transactions.
     /// </summary>
     /// <param name="app">The web application to configure</param>
     private static void ConfigurePaymentEndpoint(WebApplication app)

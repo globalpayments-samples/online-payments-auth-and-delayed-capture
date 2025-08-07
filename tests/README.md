@@ -1,6 +1,6 @@
-# E2E Tests for Card Payment Implementations
+# E2E Tests for Authorization and Delayed Capture Implementations
 
-This directory contains end-to-end tests that verify the functionality of card payment processing across all implementations (Node.js, Python, PHP, Java, .NET, and Go).
+This directory contains end-to-end tests that verify the functionality of authorization and delayed capture payment processing across all implementations (Node.js, PHP, Java, and .NET).
 
 ## Setup
 
@@ -29,10 +29,8 @@ npm test
 Run tests for specific implementations:
 ```bash
 npm run test:nodejs    # Test Node.js implementation
-npm run test:python    # Test Python implementation
 npm run test:php       # Test PHP implementation
 npm run test:java      # Test Java implementation
-npm run test:go        # Test Go implementation
 npm run test:dotnet    # Test .NET implementation
 ```
 
@@ -48,16 +46,16 @@ npm run test:verbose   # Run with verbose output
 
 The tests verify:
 
-1. **Complete Payment Flow**
+1. **Complete Authorization Flow**
    - Page loads successfully
    - Form fields can be filled out
-   - Payment submission works
+   - Authorization submission works
    - Success/failure responses display correctly
 
 2. **Error Handling**
    - Invalid zip code handling
    - Payment form validation
-   - Payment decline scenarios
+   - Authorization decline scenarios
 
 3. **Cross-Implementation Compatibility**
    - All implementations handle the same test cases
@@ -69,10 +67,8 @@ The tests verify:
 | Implementation | Language/Framework | Port | Config Endpoint |
 |---------------|-------------------|------|-----------------|
 | Node.js       | Express.js        | 8000 | `/config`       |
-| Python        | Flask             | 8000 | `/config`       |
 | PHP           | Native PHP        | 8000 | `/config.php`   |
 | Java          | Jakarta EE        | 8000 | `/config`       |
-| Go            | Native Go         | 8000 | `/config`       |
 | .NET          | ASP.NET Core      | 8000 | `/config`       |
 
 ## Test Structure
@@ -101,9 +97,7 @@ GitHub Actions workflow is configured to:
 - Node.js 18 or higher
 - Each implementation's prerequisites:
   - .NET: .NET 9.0 SDK
-  - Go: Go 1.23+
   - Java: JDK 21+
-  - Python: Python 3.11+
   - PHP: PHP 8.3+
 - Correct environment variables (see .env.sample files)
 
@@ -129,7 +123,7 @@ Common issues and solutions:
 
 The tests use predefined test data for consistency:
 - Valid card: 4242424242424242 (Visa test card)
-- Test amounts: $10.00 (success), $10.08 (decline)
+- Authorization amount: $10.00 (success), $10.08 (decline)
 - Billing zip: 12345
 
 See `test-data.json` for complete configuration.

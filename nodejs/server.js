@@ -1,8 +1,9 @@
 /**
- * Global Payments SDK Template - Node.js
+ * Global Payments Authorization and Delayed Capture - Node.js
  * 
- * This Express application provides a starting template for Global Payments SDK integration.
- * Customize the endpoints and logic below for your specific use case.
+ * This Express application demonstrates authorization and delayed capture payment processing
+ * using the Global Payments SDK. It processes authorization and immediate capture
+ * in a single workflow.
  */
 
 import express from 'express';
@@ -51,7 +52,7 @@ const sanitizePostalCode = (postalCode) => {
 
 /**
  * Config endpoint - provides access token for client-side use
- * Customize response data as needed
+ * Returns the access token needed for hosted fields tokenization
  */
 app.get('/config', async (req, res) => {
     try {
@@ -81,8 +82,8 @@ app.get('/config', async (req, res) => {
 });
 
 /**
- * Example payment processing endpoint
- * Customize this endpoint for your specific payment flow
+ * Authorization and delayed capture payment processing endpoint
+ * Processes authorization and immediate capture in a single request
  */
 app.post('/process-payment', async (req, res) => {
     try {        
@@ -169,11 +170,11 @@ app.post('/process-payment', async (req, res) => {
 });
 
 /**
- * Add your custom endpoints here
+ * Additional endpoints can be added here for extended functionality
  * Examples:
- * - app.post('/authorize', ...) // Authorization only
- * - app.post('/capture', ...)   // Capture authorized payment
- * - app.post('/refund', ...)    // Process refund
+ * - app.post('/authorize-only', ...) // Authorization only (no capture)
+ * - app.post('/capture-later', ...)  // Capture previously authorized payment
+ * - app.post('/refund', ...)         // Process refund
  * - app.get('/transaction/:id', ...) // Get transaction details
  */
 
