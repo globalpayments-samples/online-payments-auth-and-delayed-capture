@@ -126,6 +126,13 @@ PUBLIC_API_KEY=pkapi_your_public_key_here
 SECRET_API_KEY=skapi_your_secret_key_here
 ```
 
+## Test Cards
+
+| Brand | Number | CVV | Expiry |
+|-------|--------|-----|--------|
+| Visa | 4012002000060016 | 123 | 12/2025 |
+| Mastercard | 5473500000000014 | 123 | 12/2025 |
+
 ## Security Notes
 
 These examples demonstrate basic implementation patterns and should be enhanced for production use with:
@@ -150,14 +157,16 @@ This setup is designed for development and testing. For production deployment:
 8. **Implement CSRF protection**
 9. **Configure secure session handling**
 
-## Contributing
+## Resources
 
-When adding new implementations:
+- [Global Payments Developer Portal](https://developer.globalpayments.com/)
+- [API Reference](https://developer.globalpayments.com/api/references-overview)
+- [Test Cards](https://developer.globalpayments.com/resources/test-cards)
+- [PHP SDK](https://github.com/globalpayments/php-sdk)
+- [Node.js SDK](https://github.com/globalpayments/node-sdk)
+- [Java SDK](https://github.com/globalpayments/java-sdk)
+- [.NET SDK](https://github.com/globalpayments/dotnet-sdk)
 
-1. Create implementation in new directory
-2. Follow existing patterns for structure
-3. Create `Dockerfile` for containerization
-4. Add service to `docker-compose.yml`
-5. Update test configuration
-6. Add build and test commands to `docker-run.sh`
-7. Update documentation
+## License
+
+MIT
