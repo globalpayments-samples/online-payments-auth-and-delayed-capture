@@ -61,7 +61,7 @@ app.get('/config', async (req, res) => {
         clientConfig.appKey = config.appKey;
         clientConfig.channel = config.channel;
         clientConfig.environment = config.environment;
-        clientConfig.country = config.enableLogging;
+        clientConfig.country = config.country;
         clientConfig.permissions = ['PMT_POST_Create_Single'];
 
         const accessTokenInfo = await GpApiService.generateTransactionKey(clientConfig);
