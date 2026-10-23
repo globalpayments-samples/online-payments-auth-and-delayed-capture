@@ -98,7 +98,7 @@ GitHub Actions workflow is configured to:
 - Each implementation's prerequisites:
   - .NET: .NET 9.0 SDK
   - Java: JDK 21+
-  - PHP: PHP 8.3+
+  - PHP: PHP 8.3.36+
 - Correct environment variables (see .env.sample files)
 
 ## Adding New Tests
