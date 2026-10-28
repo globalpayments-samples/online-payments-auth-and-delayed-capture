@@ -1,5 +1,10 @@
 const { test, expect } = require('@playwright/test');
 const testData = require('./test-data.json');
+
+// The hosted field rejects an expired card, so keep the test cards a few years ahead
+const expYear = String(new Date().getFullYear() + 3).slice(-2);
+testData.validCard.expYear = expYear;
+testData.declineCard.expYear = expYear;
 const { spawn } = require('child_process');
 const fetch = require('node-fetch');
 const path = require('path');
@@ -259,6 +264,9 @@ async function submitAndWaitForResponse(page) {
     throw new Error('❌ Submit button never became ready');
   }
   
+  // Give the hosted fields a moment to validate what was typed, an early click is ignored
+  await page.waitForTimeout(2000);
+
   console.log('🖱️  Clicking submit button...');
   await submitButton.click();
 
