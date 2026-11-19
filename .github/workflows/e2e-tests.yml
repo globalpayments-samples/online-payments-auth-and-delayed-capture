@@ -23,7 +23,7 @@ on:
           - 'dotnet'
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '24'
   PHP_VERSION: '8.3'
   JAVA_VERSION: '21'
   DOTNET_VERSION: '10.0.x'
