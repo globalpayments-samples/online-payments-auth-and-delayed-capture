@@ -4,7 +4,7 @@ This example demonstrates authorization and delayed capture payment processing u
 
 ## Requirements
 
-- Java 11 or later
+- Java 21 or later
 - Maven
 - Global Payments account and API credentials
 
@@ -115,7 +115,7 @@ This example demonstrates basic implementation. For production use, consider:
 | Issue | Solution |
 |-------|----------|
 | `mvn` command not found | Install Maven 3.6+. Run `mvn -v` to check version |
-| Build fails | Ensure Java 11+ is installed. Run `java -version` to check |
+| Build fails | Ensure Java 21+ is installed. Run `java -version` to check |
 | Port already in use | Stop other services on port 8000, or modify `pom.xml` cargo config |
 | `.env` not loading | Verify `.env` file exists in the language directory (not project root) |
 

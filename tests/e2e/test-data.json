@@ -24,7 +24,7 @@
       "configEndpoint": "/config"
     },
     "php": {
-      "command": "cd php && php -S 0.0.0.0:8000",
+      "command": "cd php && php -S 0.0.0.0:8000 router.php",
       "url": "http://127.0.0.1:8000", 
       "configEndpoint": "/config.php"
     },

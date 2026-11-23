@@ -35,7 +35,7 @@
 ### .NET (ASP.NET Core minimal API + Global Payments SDK)
 - [`dotnet/Program.cs`](dotnet/Program.cs) — `ConfigureGlobalPaymentsSDK()` (L48–60); `ConfigureEndpoints()` (L67–101) maps `GET /config`; `ConfigurePaymentEndpoint()` (L126–252) handles `POST /process-payment`; `SanitizePostalCode()` (L111–120)
 - [`dotnet/wwwroot/index.html`](dotnet/wwwroot/index.html) — per-language copy of the payment form
-- [`dotnet/dotnet.csproj`](dotnet/dotnet.csproj) — `GlobalPayments.Api` 9.0.16, net9.0
+- [`dotnet/dotnet.csproj`](dotnet/dotnet.csproj) — `GlobalPayments.Api` 9.0.16, net10.0
 
 ### Shared
 - [`index.html`](index.html) — root copy of the frontend (each language also has its own under `php/`, `nodejs/`, `java/src/main/webapp/`, `dotnet/wwwroot/`)

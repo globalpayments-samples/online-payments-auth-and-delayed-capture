@@ -94,9 +94,9 @@ GitHub Actions workflow is configured to:
 
 ## Environment Requirements
 
-- Node.js 18 or higher
+- Node.js 24 or higher
 - Each implementation's prerequisites:
-  - .NET: .NET 9.0 SDK
+  - .NET: .NET 10.0 SDK
   - Java: JDK 21+
   - PHP: PHP 8.3.36+
 - Correct environment variables (see .env.sample files)
