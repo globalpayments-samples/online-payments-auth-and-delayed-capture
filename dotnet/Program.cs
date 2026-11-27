@@ -88,12 +88,12 @@ public class Program
             }
             catch (Exception ex)
             {
-                return Results.Problem(new
+                return Results.Json(new
                 {
                     success = false,
                     message = "Failed to generate access token",
                     error = ex.Message
-                }.ToString(), statusCode: 500);
+                }, statusCode: 500);
             }
         });
 
