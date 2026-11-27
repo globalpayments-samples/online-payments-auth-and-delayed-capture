@@ -23,8 +23,8 @@ This example demonstrates authorization and delayed capture payment processing u
 2. Copy `.env.sample` to `.env`
 3. Update `.env` with your Global Payments credentials:
    ```
-   PUBLIC_API_KEY=pk_test_xxx
-   SECRET_API_KEY=sk_test_xxx
+   APP_ID=your_gp_api_app_id
+   APP_KEY=your_gp_api_app_key
    ```
 4. Install dependencies:
    ```bash
@@ -36,7 +36,7 @@ This example demonstrates authorization and delayed capture payment processing u
    ```
    Or manually:
    ```bash
-   mvn jetty:run
+   mvn clean package cargo:run
    ```
 
 ## Implementation Details
@@ -58,7 +58,7 @@ Authorization processing flow:
 1. Client submits payment token and billing zip
 2. Server creates CreditCardData with token
 3. Creates Address with postal code
-4. Processes $10 USD authorization
+4. Authorizes the amount from the form in EUR, then captures it
 5. Returns success/error response with transaction ID
 
 
@@ -71,7 +71,7 @@ Implements comprehensive error handling:
 ## API Endpoints
 
 ### GET /public-key
-Returns public API key for client-side SDK initialization.
+Returns a GP API access token, limited to tokenization, for client-side SDK initialization.
 
 Response:
 ```json

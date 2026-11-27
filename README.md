@@ -14,7 +14,7 @@ This directory contains examples of authorization and delayed capture payment in
 - Authorization and delayed capture payment processing with tokenization
 - Environment-based configuration using .env files
 - Error handling and response formatting
-- Public/private API key management
+- GP API app credentials (APP_ID and APP_KEY) kept on the server
 - Simple web interface for payment submission
 
 ## Core Functionality
@@ -28,12 +28,12 @@ All implementations demonstrate:
 
 2. Authorization Processing
    - Accepting tokenized card data
-   - Processing a $10 USD authorization
+   - Authorizing the amount from the form in EUR, then capturing it
    - Handling billing address (postal code)
    - Error handling and response formatting
 
 3. API Endpoints
-   - GET `/config` - Provides public API key for client-side use
+   - GET `/config` - Provides a GP API access token, limited to tokenization, for client-side use
    - POST `/process-payment` - Processes the authorization with token and billing zip
    - Serves a basic HTML interface for testing
 
@@ -44,9 +44,9 @@ All implementations demonstrate:
 The fastest way to get all implementations running is using Docker:
 
 ```bash
-# 1. Setup environment
-cp .env.sample .env
-# Edit .env with your actual API keys
+# 1. Setup environment: create .env in this folder with your GP API credentials
+#    APP_ID=your_gp_api_app_id
+#    APP_KEY=your_gp_api_app_key
 
 # 2. Make the management script executable
 chmod +x docker-run.sh
@@ -122,16 +122,16 @@ All implementations require API credentials in a `.env` file:
 cp .env.sample .env
 
 # Edit with your actual credentials
-PUBLIC_API_KEY=pkapi_your_public_key_here
-SECRET_API_KEY=skapi_your_secret_key_here
+APP_ID=your_gp_api_app_id
+APP_KEY=your_gp_api_app_key
 ```
 
 ## Test Cards
 
 | Brand | Number | CVV | Expiry |
 |-------|--------|-----|--------|
-| Visa | 4012002000060016 | 123 | 12/2025 |
-| Mastercard | 5473500000000014 | 123 | 12/2025 |
+| Visa | 4012002000060016 | 123 | Any future date |
+| Mastercard | 5473500000000014 | 123 | Any future date |
 
 ## Security Notes
 
